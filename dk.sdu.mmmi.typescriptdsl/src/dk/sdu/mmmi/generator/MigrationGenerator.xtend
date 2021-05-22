@@ -11,10 +11,12 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 
 import static extension dk.sdu.mmmi.generator.Helpers.*
+import dk.sdu.mmmi.typescriptdsl.Database
 
 class MigrationGenerator implements FileGenerator {
 	override generate(Resource resource, IFileSystemAccess2 fsa) {
-		val tables = resource.allContents.filter(Table).toList
+		val tables = newArrayList()
+		resource.allContents.filter(Database).head.getTablesAndRewrite(tables)
 		
 		fsa.generateFile('createTables.ts', generateCreateFile(tables))
 		fsa.generateFile('dropTables.ts', generateDropFile(tables)) 
@@ -102,7 +104,7 @@ class MigrationGenerator implements FileGenerator {
 				'''timestamp('«attr.name»')'''
 			}
 			TableType: {
-				val primary = attrType.table.primaryKey
+				val primary = (attrType.table as Table).primaryKey
 				'''«primary.type.generateForeignFunctionCall('''«attr.name»_«primary.name»''')»'''
 			}
 			default: throw new Exception("Unknown type for create!")
@@ -116,8 +118,9 @@ class MigrationGenerator implements FileGenerator {
 	def generateRelationsFunctionCalls(Attribute attr) {
 		if (!(attr.type instanceof TableType)) throw new Exception('''Attribute «attr.name» is not a foreign key''')
 		val type = attr.type as TableType
-		val primary = type.table.primaryKey
-		'''foreign('«attr.name»_«primary.name»').references('«type.table.name.toLowerCase».«primary.name»')'''
+		val table = type.table as Table
+		val primary = table.primaryKey
+		'''foreign('«attr.name»_«primary.name»').references('«table.name.toLowerCase».«primary.name»')'''
 	}
 	
 	def generateForeignFunctionCall(AttributeType type, String name) {

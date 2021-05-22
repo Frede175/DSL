@@ -136,7 +136,7 @@ class TableTypeGenerator implements IntermediateGenerator {
 		var name = attr.name
 		var type = attr.type
 		if (attr.type instanceof TableType) {
-			val table = (attr.type as TableType).table
+			val table = (attr.type as TableType).table as Table
 			val primary = table.primaryKey
 			name = '''«table.name.toCamelCase»«primary.name.toPascalCase»'''
 			type = primary.type

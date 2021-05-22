@@ -2,6 +2,12 @@ package dk.sdu.mmmi.generator
 
 import dk.sdu.mmmi.typescriptdsl.Table
 import java.util.ArrayList
+import dk.sdu.mmmi.typescriptdsl.Attribute
+import dk.sdu.mmmi.typescriptdsl.ModuleRefernce
+import java.util.List
+import dk.sdu.mmmi.typescriptdsl.Database
+import dk.sdu.mmmi.typescriptdsl.ITable
+import dk.sdu.mmmi.typescriptdsl.TableType
 
 class Helpers {
 	
@@ -51,11 +57,32 @@ class Helpers {
 		return words.join('_')
 	}
 	
-	static def getPrimaryKey(Table table) {
+	static def Attribute getPrimaryKey(Table table) {
+		if (table.superType !== null) return table.superType.primaryKey
 		val primaries = table.attributes.filter[it.primary]
 		if (primaries.size == 0) throw new Exception('''No primary key for table «table.name»''')
 		if (primaries.size > 1) throw new Exception('''Only one primary key can be defined for «table.name»''')
 		primaries.head
-	}	
+	}
+	
+	static def void getTablesAndRewrite(Database database, List<Table> tables)	{
+		tables.addAll(database.tables as List)
+		database.modules.forEach[it.getTablesAndRewrite(tables)]
+	}
+	
+	static def void getTablesAndRewrite(ModuleRefernce ref, List<Table> tables)	{
+		if (ref.type !== null) {
+			// this is a typed called to a generic, rewrite the parameter reference to use the real table
+			val parameter = ref.module.type
+			ref.module.tables.forEach[(it as Table).attributes.forEach[{
+				if (it.type instanceof TableType && (it.type as TableType).table === parameter) {
+					(it.type as TableType).table = ref.type
+				}
+			}]]
+		}
+		tables.addAll(ref.module.tables as List)
+		ref.module.modules.forEach[it.getTablesAndRewrite(tables)]
+		
+	}
 }
 

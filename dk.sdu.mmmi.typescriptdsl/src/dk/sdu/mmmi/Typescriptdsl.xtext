@@ -2,12 +2,33 @@ grammar dk.sdu.mmmi.Typescriptdsl with org.eclipse.xtext.common.Terminals
 
 generate typescriptdsl "http://www.sdu.dk/mmmi/Typescriptdsl"
 
+Model:
+	modules += Module*
+	database = Database
+;
+
+
 Database:
-	'database' name=ID
-	
-	config += Config*
-	
-	tables += Table+
+	'database' name=ID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+		config += Config*
+		tables += Table+
+;
+
+Module:
+	'module' ModuleID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+		tables += Table+
+;
+
+ModuleRefernce hidden():
+	module=[Module]('<' type=[Table] '>')?
+;
+
+ModuleID returns Module hidden():
+	name=ID(type=GenericTable)?
+;
+
+GenericTable returns ITable hidden():
+	{ModuleParameter} '<'name=ID'>'
 ;
 
 Config returns Config:
@@ -18,13 +39,13 @@ Config returns Config:
 	{ConfigPassword} 'password' value=STRING
 ;
 
-Table:
-	'table' name=ID ('extends' superType=[Table])? ':'
+Table returns ITable:
+	{Table} 'table' name=ID ('extends' superType=[Table])? ':'
 		attributes += Attribute+
 ;
 
 Attribute:
-	name=ID ':' type=AttributeType (optional?='?')? (primary?='primary')? 
+	name=ID ':' type=AttributeType (many?='*')? (optional?='?')? (primary?='primary')? 
 		('constraint'  constraint=OrConstraint)?
 ;
 
@@ -83,5 +104,5 @@ PrimaryType returns PrimaryType:
 ;
 
 TableType returns TableType:
-	table=[Table]
+	table=[ITable]
 ;

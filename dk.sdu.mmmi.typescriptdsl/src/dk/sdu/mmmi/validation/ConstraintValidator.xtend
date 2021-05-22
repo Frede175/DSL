@@ -35,21 +35,23 @@ class ConstraintValidator extends AbstractTypescriptdslValidator {
 			if (!list.exists[exists[it === attr.name]]) {
 				error('''Attribute «attr.name» is not used in constraint''', TypescriptdslPackage.Literals.ATTRIBUTE__CONSTRAINT)	
 			}
-			if (!list.get(0).forall[!list.get(1).contains(it)]) {
-				error('Attribute name is the same as on the left side', it, TypescriptdslPackage.Literals.COMPARE_CONSTRAINT__RIGHT)
-			}
 		]
 	}
 	
 	@Check
 	def validatePrimary(Table table) {
 		val primaries = table.attributes.filter[it.primary]
-		if (primaries.empty) {
-			error('''Table «table.name» does not contain a primary key.''', TypescriptdslPackage.Literals.TABLE__NAME)
+		
+		if (!primaries.empty && table.superType !== null) {
+			error('''Table «table.name» cannot have a primary key when extending another table.''', TypescriptdslPackage.Literals.ITABLE__NAME)
+		}
+		
+		if (primaries.empty && table.superType === null) {
+			error('''Table «table.name» does not contain a primary key.''', TypescriptdslPackage.Literals.ITABLE__NAME)
 		}
 		
 		if (primaries.length > 1) {
-			error('''Table «table.name» contains more than one primary key.''', TypescriptdslPackage.Literals.TABLE__NAME)
+			error('''Table «table.name» contains more than one primary key.''', TypescriptdslPackage.Literals.ITABLE__NAME)
 		}
 	}
 	
