@@ -17,6 +17,7 @@ import org.eclipse.xtext.validation.Check
 import dk.sdu.mmmi.typescriptdsl.TypescriptdslPackage
 import dk.sdu.mmmi.typescriptdsl.IntType
 import dk.sdu.mmmi.typescriptdsl.Table
+import dk.sdu.mmmi.typescriptdsl.GenericTable
 
 class ConstraintValidator extends AbstractTypescriptdslValidator {
 	
@@ -39,19 +40,20 @@ class ConstraintValidator extends AbstractTypescriptdslValidator {
 	}
 	
 	@Check
-	def validatePrimary(Table table) {
+	def void validatePrimary(Table table) {
+		if (table instanceof GenericTable) return
 		val primaries = table.attributes.filter[it.primary]
 		
 		if (!primaries.empty && table.superType !== null) {
-			error('''Table «table.name» cannot have a primary key when extending another table.''', TypescriptdslPackage.Literals.ITABLE__NAME)
+			error('''Table «table.name» cannot have a primary key when extending another table.''', TypescriptdslPackage.Literals.TABLE__NAME)
 		}
 		
 		if (primaries.empty && table.superType === null) {
-			error('''Table «table.name» does not contain a primary key.''', TypescriptdslPackage.Literals.ITABLE__NAME)
+			error('''Table «table.name» does not contain a primary key.''', TypescriptdslPackage.Literals.TABLE__NAME)
 		}
 		
 		if (primaries.length > 1) {
-			error('''Table «table.name» contains more than one primary key.''', TypescriptdslPackage.Literals.ITABLE__NAME)
+			error('''Table «table.name» contains more than one primary key.''', TypescriptdslPackage.Literals.TABLE__NAME)
 		}
 	}
 	

@@ -81,7 +81,7 @@ class TableTypeGenerator implements IntermediateGenerator {
 		
 		val typeName = attribute.type.attributeTypeAsString
 		
-		'''«attribute.name»: «typeName»«attribute.optional ? ' | null'»'''
+		'''«attribute.name»: «typeName»«attribute.many ? '[]'»«attribute.optional ? ' | null'»'''
 	}
 	
 	private def generateGetPayload(Table table) {
@@ -126,7 +126,7 @@ class TableTypeGenerator implements IntermediateGenerator {
 	
 	private def generateCreateInputType(Table table) '''
 		export type «table.name»CreateInput = {
-			«FOR a: table.attributes»
+			«FOR a: table.attributes.filter[!it.many]»
 			«a.generateAttributeInput»
 			«ENDFOR»
 		}
@@ -136,7 +136,7 @@ class TableTypeGenerator implements IntermediateGenerator {
 		var name = attr.name
 		var type = attr.type
 		if (attr.type instanceof TableType) {
-			val table = (attr.type as TableType).table as Table
+			val table = (attr.type as TableType).table
 			val primary = table.primaryKey
 			name = '''«table.name.toCamelCase»«primary.name.toPascalCase»'''
 			type = primary.type

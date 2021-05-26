@@ -104,7 +104,7 @@ class MigrationGenerator implements FileGenerator {
 				'''timestamp('«attr.name»')'''
 			}
 			TableType: {
-				val primary = (attrType.table as Table).primaryKey
+				val primary = attrType.table.primaryKey
 				'''«primary.type.generateForeignFunctionCall('''«attr.name»_«primary.name»''')»'''
 			}
 			default: throw new Exception("Unknown type for create!")
@@ -118,7 +118,7 @@ class MigrationGenerator implements FileGenerator {
 	def generateRelationsFunctionCalls(Attribute attr) {
 		if (!(attr.type instanceof TableType)) throw new Exception('''Attribute «attr.name» is not a foreign key''')
 		val type = attr.type as TableType
-		val table = type.table as Table
+		val table = type.table
 		val primary = table.primaryKey
 		'''foreign('«attr.name»_«primary.name»').references('«table.name.toLowerCase».«primary.name»')'''
 	}

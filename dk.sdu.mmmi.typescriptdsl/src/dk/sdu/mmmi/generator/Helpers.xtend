@@ -6,7 +6,6 @@ import dk.sdu.mmmi.typescriptdsl.Attribute
 import dk.sdu.mmmi.typescriptdsl.ModuleRefernce
 import java.util.List
 import dk.sdu.mmmi.typescriptdsl.Database
-import dk.sdu.mmmi.typescriptdsl.ITable
 import dk.sdu.mmmi.typescriptdsl.TableType
 
 class Helpers {
@@ -66,21 +65,22 @@ class Helpers {
 	}
 	
 	static def void getTablesAndRewrite(Database database, List<Table> tables)	{
-		tables.addAll(database.tables as List)
+		tables.addAll(database.tables)
 		database.modules.forEach[it.getTablesAndRewrite(tables)]
 	}
 	
 	static def void getTablesAndRewrite(ModuleRefernce ref, List<Table> tables)	{
 		if (ref.type !== null) {
 			// this is a typed called to a generic, rewrite the parameter reference to use the real table
-			val parameter = ref.module.type
-			ref.module.tables.forEach[(it as Table).attributes.forEach[{
+			val parameter = ref.module.generic
+			/*ref.module.tables.forEach[(it as Table).attributes.forEach[{
 				if (it.type instanceof TableType && (it.type as TableType).table === parameter) {
 					(it.type as TableType).table = ref.type
 				}
-			}]]
+			}]] 
+			*/
 		}
-		tables.addAll(ref.module.tables as List)
+		tables.addAll(ref.module.tables)
 		ref.module.modules.forEach[it.getTablesAndRewrite(tables)]
 		
 	}

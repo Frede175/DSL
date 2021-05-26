@@ -8,27 +8,23 @@ Model:
 ;
 
 
-Database:
-	'database' name=ID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+Database returns Extendable:
+	{Database} 'database' name=ID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
 		config += Config*
 		tables += Table+
 ;
 
-Module:
-	'module' ModuleID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+Module returns Extendable:
+	{Module} 'module' name=ID (generic=GenericTable)? ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
 		tables += Table+
 ;
 
-ModuleRefernce hidden():
+ModuleRefernce:
 	module=[Module]('<' type=[Table] '>')?
 ;
 
-ModuleID returns Module hidden():
-	name=ID(type=GenericTable)?
-;
-
-GenericTable returns ITable hidden():
-	{ModuleParameter} '<'name=ID'>'
+GenericTable returns Table:
+	{GenericTable} '<'name=ID'>'
 ;
 
 Config returns Config:
@@ -39,8 +35,8 @@ Config returns Config:
 	{ConfigPassword} 'password' value=STRING
 ;
 
-Table returns ITable:
-	{Table} 'table' name=ID ('extends' superType=[Table])? ':'
+Table:
+	'table' name=ID ('extends' superType=[Table])? ':'
 		attributes += Attribute+
 ;
 
@@ -104,5 +100,5 @@ PrimaryType returns PrimaryType:
 ;
 
 TableType returns TableType:
-	table=[ITable]
+	table=[Table]
 ;
