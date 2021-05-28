@@ -10,18 +10,20 @@ import dk.sdu.mmmi.typescriptdsl.Table
 import dk.sdu.mmmi.typescriptdsl.Attribute
 import java.util.List
 import java.util.Set
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class TypescriptdslScopeProvider extends AbstractTypescriptdslScopeProvider {
 	
 	override getScope(EObject object, EReference ref) {
 		switch ref {
-			case ref === TypescriptdslPackage.Literals.TABLE_TYPE__TABLE || ref === TypescriptdslPackage.Literals.TABLE__SUPER_TYPE: {
+			case ref === TypescriptdslPackage.Literals.TABLE_TYPE__TABLE || ref === TypescriptdslPackage.Literals.REAL_TABLE__SUPER_TYPE: {
 				val database = EcoreUtil2.getContainerOfType(object, Database)
 				val tables = newArrayList()
 				if (database === null) {
 					val module = EcoreUtil2.getContainerOfType(object, dk.sdu.mmmi.typescriptdsl.Module)
 					if (module.generic !== null) tables.add(module.generic)
 					module.getTables(tables, newHashSet)
+					
 					return Scopes.scopeFor(tables)
 				} else {
 					database.getTablesFromDatabase(tables)
@@ -34,6 +36,7 @@ class TypescriptdslScopeProvider extends AbstractTypescriptdslScopeProvider {
 				table.getAttributes(attrs, newHashSet)
 				return Scopes.scopeFor(attrs)
 			}
+			
 		}
 		return super.getScope(object, ref)		
 	}
@@ -51,11 +54,12 @@ class TypescriptdslScopeProvider extends AbstractTypescriptdslScopeProvider {
 	}
 	
 	
-	def void getAttributes(Table table, List<Attribute> attrs, Set<Table> visited)  {
-		if (table !== null && !visited.contains(table)) {
-			visited.add(table)
-			attrs.addAll(table.attributes)
-			table.superType.getAttributes(attrs, visited)
+	def void getAttributes(Table table, List<Attribute> attrs, Set<RealTable> visited)  {
+		if (table !== null && table instanceof RealTable && !visited.contains(table)) {
+			val real = table as RealTable
+			visited.add(real)
+			attrs.addAll(real.attributes)
+			real.superType.getAttributes(attrs, visited)
 		}
 	}
 }

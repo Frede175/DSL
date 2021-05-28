@@ -1,6 +1,6 @@
 grammar dk.sdu.mmmi.Typescriptdsl with org.eclipse.xtext.common.Terminals
 
-generate typescriptdsl "http://www.sdu.dk/mmmi/Typescriptdsl"
+import "http://www.sdu.dk/mmmi/Typescriptdsl"
 
 Model:
 	modules += Module*
@@ -8,23 +8,23 @@ Model:
 ;
 
 
-Database returns Extendable:
-	{Database} 'database' name=ID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+Database:
+	'database' name=ID ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
 		config += Config*
-		tables += Table+
+		tables += RealTable+
 ;
 
-Module returns Extendable:
-	{Module} 'module' name=ID (generic=GenericTable)? ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
-		tables += Table+
+Module:
+	'module' name=ID (generic=GenericTable)? ('uses' modules += ModuleRefernce (',' modules += ModuleRefernce)*)? ':'
+		tables += RealTable+
 ;
 
 ModuleRefernce:
-	module=[Module]('<' type=[Table] '>')?
+	module=[Module]('<' type=[RealTable] '>')?
 ;
 
-GenericTable returns Table:
-	{GenericTable} '<'name=ID'>'
+GenericTable:
+	'<'name=ID'>'
 ;
 
 Config returns Config:
@@ -35,13 +35,13 @@ Config returns Config:
 	{ConfigPassword} 'password' value=STRING
 ;
 
-Table:
+RealTable:
 	'table' name=ID ('extends' superType=[Table])? ':'
 		attributes += Attribute+
 ;
 
 Attribute:
-	name=ID ':' type=AttributeType (many?='*')? (optional?='?')? (primary?='primary')? 
+	name=ID ':' type=AttributeType (many?='[]')? (optional?='?')? (primary?='primary')? 
 		('constraint'  constraint=OrConstraint)?
 ;
 

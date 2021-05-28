@@ -16,8 +16,8 @@ import java.util.List
 import org.eclipse.xtext.validation.Check
 import dk.sdu.mmmi.typescriptdsl.TypescriptdslPackage
 import dk.sdu.mmmi.typescriptdsl.IntType
-import dk.sdu.mmmi.typescriptdsl.Table
 import dk.sdu.mmmi.typescriptdsl.GenericTable
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class ConstraintValidator extends AbstractTypescriptdslValidator {
 	
@@ -40,7 +40,7 @@ class ConstraintValidator extends AbstractTypescriptdslValidator {
 	}
 	
 	@Check
-	def void validatePrimary(Table table) {
+	def void validatePrimary(RealTable table) {
 		if (table instanceof GenericTable) return
 		val primaries = table.attributes.filter[it.primary]
 		

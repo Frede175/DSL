@@ -5,24 +5,24 @@ import dk.sdu.mmmi.typescriptdsl.AttributeType
 import dk.sdu.mmmi.typescriptdsl.DateType
 import dk.sdu.mmmi.typescriptdsl.IntType
 import dk.sdu.mmmi.typescriptdsl.StringType
-import dk.sdu.mmmi.typescriptdsl.Table
 import dk.sdu.mmmi.typescriptdsl.TableType
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 
 import static extension dk.sdu.mmmi.generator.Helpers.*
 import dk.sdu.mmmi.typescriptdsl.Database
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class MigrationGenerator implements FileGenerator {
 	override generate(Resource resource, IFileSystemAccess2 fsa) {
 		val tables = newArrayList()
-		resource.allContents.filter(Database).head.getTablesAndRewrite(tables)
+		resource.allContents.filter(Database).head.getTables(tables)
 		
 		fsa.generateFile('createTables.ts', generateCreateFile(tables))
 		fsa.generateFile('dropTables.ts', generateDropFile(tables)) 
 	}
 	
-	private def generateDropFile(Iterable<Table> tables) '''
+	private def generateDropFile(Iterable<RealTable> tables) '''
 		import { Knex } from 'knex'
 		
 		export async function dropTables(knex: Knex): Promise<void> {
@@ -38,7 +38,7 @@ class MigrationGenerator implements FileGenerator {
 		}
 	'''
 	
-	private def generateCreateFile(Iterable<Table> tables) '''
+	private def generateCreateFile(Iterable<RealTable> tables) '''
 		import { Knex } from 'knex'
 		
 		export function createTables(knex: Knex): Promise<void> {
@@ -48,7 +48,7 @@ class MigrationGenerator implements FileGenerator {
 			«t.generateCreateTable»
 			«ENDFOR»
 			
-			«FOR t: tables.filter[it.attributes.exists[it.type instanceof TableType]] SEPARATOR '\n'»
+			«FOR t: tables.filter[it.attributes.exists[it.type instanceof TableType && !it.many]] SEPARATOR '\n'»
 			«t.generateRelationsAlterTable»
 			«ENDFOR»
 		
@@ -60,7 +60,7 @@ class MigrationGenerator implements FileGenerator {
 		}
 	'''
 	
-	private def generateCreateTable(Table table) '''
+	private def generateCreateTable(RealTable table) '''
 		query = query.createTable('«table.name.toLowerCase»', function (table) {
 			«FOR d: table.attributes»
 			«d.generateCreateAttribute»
@@ -72,15 +72,15 @@ class MigrationGenerator implements FileGenerator {
 		})
 	'''
 	
-	private def generateRelationsAlterTable(Table table) '''
+	private def generateRelationsAlterTable(RealTable table) '''
 		query = query.alterTable('«table.name.toSnakeCase»', function (table) {
-			«FOR d: table.attributes.filter[it.type instanceof TableType]»
+			«FOR d: table.attributes.filter[it.type instanceof TableType && !it.many]»
 			«d.generateCreateRelationAttribute»
 			«ENDFOR»
 		})
 	'''
 	
-	private def generateSuperTypeRelation(Table table) '''
+	private def generateSuperTypeRelation(RealTable table) '''
 		query = query.alterTable('«table.name.toSnakeCase»', function (table) {
 			«val primary = table.superType.primaryKey»
 			table.foreign('«table.name.toSnakeCase»_«primary.name»').references('«table.name.toLowerCase».«primary.name»')

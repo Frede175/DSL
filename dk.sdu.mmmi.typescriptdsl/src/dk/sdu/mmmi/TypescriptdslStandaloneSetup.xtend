@@ -3,6 +3,9 @@
  */
 package dk.sdu.mmmi
 
+import com.google.inject.Injector
+import org.eclipse.emf.ecore.EPackage
+import dk.sdu.mmmi.typescriptdsl.TypescriptdslPackage
 
 /**
  * Initialization support for running Xtext languages without Equinox extension registry.
@@ -11,5 +14,12 @@ class TypescriptdslStandaloneSetup extends TypescriptdslStandaloneSetupGenerated
 
 	def static void doSetup() {
 		new TypescriptdslStandaloneSetup().createInjectorAndDoEMFRegistration()
+	}
+	
+	override register(Injector injector) {
+		if (!EPackage.Registry.INSTANCE.containsKey(TypescriptdslPackage.eNS_URI)) {
+			EPackage.Registry.INSTANCE.put(TypescriptdslPackage.eNS_URI, TypescriptdslPackage.eINSTANCE)
+		}
+		super.register(injector)
 	}
 }

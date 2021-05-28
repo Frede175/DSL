@@ -18,7 +18,6 @@ class TypescriptdslValidator extends AbstractTypescriptdslValidator {
 	
 	@Check
 	def void validateNoCycleModuleReference(Extendable extendable) {
-		println(extendable)
 		if (extendable.modules.length == 0) return
 		
 		val visited = newHashSet(extendable)

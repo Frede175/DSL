@@ -33,6 +33,9 @@ Workflow {
 		language = StandardLanguage {
 			name = "dk.sdu.mmmi.Typescriptdsl"
 			fileExtensions = "tdsl"
+			referencedResource = "platform:/resource/dk.sdu.mmmi.typescriptdsl/model/custom/Typescriptdsl.genmodel"
+			
+			fragment = ecore2xtext.Ecore2XtextValueConverterServiceFragment2 auto-inject {}
 			
 			serializer = {
 				generateStub = false

@@ -1,17 +1,18 @@
 package dk.sdu.mmmi.generator
 
-import dk.sdu.mmmi.typescriptdsl.Table
+
 import java.util.List
 
 import static extension dk.sdu.mmmi.generator.Helpers.*
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class TableDataGenerator implements IntermediateGenerator {
 	
-	override generate(List<Table> tables) {		
+	override generate(List<RealTable> tables) {		
 		tables.generateTablesTypes
 	}
 	
-	private def generateTablesTypes(List<Table> tables) '''
+	private def generateTablesTypes(List<RealTable> tables) '''
 		export interface TableData {
 			typeName: string
 			tableName: string
@@ -25,7 +26,7 @@ class TableDataGenerator implements IntermediateGenerator {
 		}
 	'''
 	
-	private def generateTable(Table table) '''
+	private def generateTable(RealTable table) '''
 		«table.name.toCamelCase»: {
 			typeName: '«table.name.toCamelCase»',
 			tableName: '«table.name.toSnakeCase»',

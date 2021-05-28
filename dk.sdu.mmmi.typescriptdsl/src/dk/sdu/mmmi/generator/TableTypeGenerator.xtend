@@ -4,19 +4,19 @@ import dk.sdu.mmmi.typescriptdsl.Attribute
 import dk.sdu.mmmi.typescriptdsl.DateType
 import dk.sdu.mmmi.typescriptdsl.IntType
 import dk.sdu.mmmi.typescriptdsl.StringType
-import dk.sdu.mmmi.typescriptdsl.Table
 import dk.sdu.mmmi.typescriptdsl.TableType
 import dk.sdu.mmmi.typescriptdsl.AttributeType
 import java.util.List
 
 import static extension dk.sdu.mmmi.generator.Helpers.*
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class TableTypeGenerator implements IntermediateGenerator {
-	override generate(List<Table> tables) {
-		tables.filter(Table).map[generateTypes].join("\n")
+	override generate(List<RealTable> tables) {
+		tables.map[generateTypes].join("\n")
 	}
 	
-	private def CharSequence generateTypes(Table table) {
+	private def CharSequence generateTypes(RealTable table) {
 		newArrayList(
 			table.generateTable,
 			table.generateFindArgs,
@@ -27,11 +27,11 @@ class TableTypeGenerator implements IntermediateGenerator {
 		).join('\n')
 	}
 	
-	private def hasRelations(Table table) {
+	private def hasRelations(RealTable table) {
 		table.attributes.exists[it | it.type instanceof TableType]
 	}
 	
-	private def generateTable(Table table) '''
+	private def generateTable(RealTable table) '''
 		export type «table.name» = «IF table.superType !== null»«table.superType.name» & «ENDIF»{
 			«FOR a: table.attributes»
 			«a.generateAttribute»
@@ -39,29 +39,29 @@ class TableTypeGenerator implements IntermediateGenerator {
 		}
 	'''
 	
-	private def generateFindArgs(Table table) '''
+	private def generateFindArgs(RealTable table) '''
 		export type «table.name»Args = {
 			where?: WhereInput<«table.name»>
 			select?: «table.name»Select | null
-			«IF table.hasRelations»include?: «table.name»Include | null«ENDIF»
+			«IF table.hasRelations»include?: «table.realTable.name»Include | null«ENDIF»
 		}
 	'''
 	
-	private def generateInclude(Table table) {
+	private def generateInclude(RealTable table) {
 		if (!table.hasRelations) return ''
 		'''
 		export type «table.name»Include = {
 			«FOR a: table.attributes.filter[it | it.type instanceof TableType]»
-			«a.name»?: boolean«a.type instanceof TableType ? " | " + a.name.toPascalCase + "Args" : ""»
+			«a.name»?: boolean | «(a.type as TableType).table.realTable.name + "Args"»
 			«ENDFOR»
 		}
 		'''
 	}
 	
-	private def generateSelect(Table table) '''
+	private def generateSelect(RealTable table) '''
 		export type «table.name»Select = {
 			«FOR a: table.attributes.filter[!(type instanceof TableType)]»
-			«a.name»?: boolean«a.type instanceof TableType ? " | " + a.name.toPascalCase + "Args" : ""»
+			«a.name»?: boolean
 			«ENDFOR»
 		}
 	'''
@@ -84,7 +84,7 @@ class TableTypeGenerator implements IntermediateGenerator {
 		'''«attribute.name»: «typeName»«attribute.many ? '[]'»«attribute.optional ? ' | null'»'''
 	}
 	
-	private def generateGetPayload(Table table) {
+	private def generateGetPayload(RealTable table) {
 		val hasRelations = table.hasRelations
 		'''
 		export type «table.name»GetPayload<
@@ -99,32 +99,32 @@ class TableTypeGenerator implements IntermediateGenerator {
 		'''
 	}
 	
-	private def generatePayloadInclude(Table table) {
+	private def generatePayloadInclude(RealTable table) {
 		if (!table.hasRelations) return ''
 		'''
 		'include' extends U
 			? «table.name» & {
 				[P in TrueKeys<S['include']>] :
 				«FOR a: table.attributes.filter[it.type instanceof TableType]»
-				P extends '«a.name»' ? «a.name.toPascalCase»GetPayload<S['include'][P]> «a.optional ? '| null'» :
+				P extends '«a.name»' ? «a.many ? 'Array<'»«(a.type as TableType).table.realTable.name.toPascalCase»GetPayload<S['include'][P]>«a.many ? '>'» «a.optional ? '| null'» :
 				«ENDFOR»
 				never
 			}
 		'''
 	}
 	
-	private def generatePayloadSelect(Table table) '''
+	private def generatePayloadSelect(RealTable table) '''
 		'select' extends U
 		? {
 			[P in TrueKeys<S['select']>]: P extends keyof «table.name» ? «table.name»[P] :
 			«FOR a: table.attributes.filter[it.type instanceof TableType]»
-				P extends '«a.name»' ? «a.name.toPascalCase»GetPayload<S['select'][P]> «a.optional ? '| null'» :
+				P extends '«a.name»' ? «(a.type as TableType).table.realTable.name.toPascalCase»GetPayload<S['select'][P]> «a.optional ? '| null'» :
 			«ENDFOR»
 			never
 		} : «table.name»
 	'''
 	
-	private def generateCreateInputType(Table table) '''
+	private def generateCreateInputType(RealTable table) '''
 		export type «table.name»CreateInput = {
 			«FOR a: table.attributes.filter[!it.many]»
 			«a.generateAttributeInput»

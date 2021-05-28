@@ -1,11 +1,11 @@
 package dk.sdu.mmmi.generator
 
-import dk.sdu.mmmi.typescriptdsl.Table
 import java.util.List
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class UtilityTypeGenerator implements IntermediateGenerator {
 	
-	override generate(List<Table> tables) '''
+	override generate(List<RealTable> tables) '''
 		type SelectAndInclude = {
 		  select: any
 		  include: any

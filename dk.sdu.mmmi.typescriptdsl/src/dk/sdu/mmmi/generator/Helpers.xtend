@@ -3,12 +3,18 @@ package dk.sdu.mmmi.generator
 import dk.sdu.mmmi.typescriptdsl.Table
 import java.util.ArrayList
 import dk.sdu.mmmi.typescriptdsl.Attribute
-import dk.sdu.mmmi.typescriptdsl.ModuleRefernce
 import java.util.List
-import dk.sdu.mmmi.typescriptdsl.Database
-import dk.sdu.mmmi.typescriptdsl.TableType
+import dk.sdu.mmmi.typescriptdsl.RealTable
+import dk.sdu.mmmi.typescriptdsl.GenericTable
+import dk.sdu.mmmi.typescriptdsl.Extendable
 
 class Helpers {
+	
+	
+	static def RealTable getRealTable(Table table) {
+		if (table instanceof RealTable) return table
+		return (table as GenericTable).real
+	}
 	
 	/**
 	 * Handle conversion from Pascal and Snake case
@@ -57,32 +63,16 @@ class Helpers {
 	}
 	
 	static def Attribute getPrimaryKey(Table table) {
-		if (table.superType !== null) return table.superType.primaryKey
-		val primaries = table.attributes.filter[it.primary]
+		if (table.realTable.superType !== null) return table.realTable.superType.primaryKey
+		val primaries = table.realTable.attributes.filter[it.primary]
 		if (primaries.size == 0) throw new Exception('''No primary key for table «table.name»''')
 		if (primaries.size > 1) throw new Exception('''Only one primary key can be defined for «table.name»''')
 		primaries.head
 	}
 	
-	static def void getTablesAndRewrite(Database database, List<Table> tables)	{
-		tables.addAll(database.tables)
-		database.modules.forEach[it.getTablesAndRewrite(tables)]
-	}
-	
-	static def void getTablesAndRewrite(ModuleRefernce ref, List<Table> tables)	{
-		if (ref.type !== null) {
-			// this is a typed called to a generic, rewrite the parameter reference to use the real table
-			val parameter = ref.module.generic
-			/*ref.module.tables.forEach[(it as Table).attributes.forEach[{
-				if (it.type instanceof TableType && (it.type as TableType).table === parameter) {
-					(it.type as TableType).table = ref.type
-				}
-			}]] 
-			*/
-		}
-		tables.addAll(ref.module.tables)
-		ref.module.modules.forEach[it.getTablesAndRewrite(tables)]
-		
+	static def void getTables(Extendable extendable, List<RealTable> tables)	{
+		tables.addAll(extendable.tables)
+		extendable.modules.forEach[it.module.getTables(tables)]
 	}
 }
 

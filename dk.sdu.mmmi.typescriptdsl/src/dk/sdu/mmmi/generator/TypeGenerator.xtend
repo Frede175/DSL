@@ -9,7 +9,7 @@ class TypeGenerator implements FileGenerator {
 	
 	override generate(Resource resource, IFileSystemAccess2 fsa) {
 		val tables = newArrayList()
-		resource.allContents.filter(Database).head.getTablesAndRewrite(tables)
+		resource.allContents.filter(Database).head.getTables(tables)
 		val generators = newArrayList(new UtilityTypeGenerator, new TableTypeGenerator, new DelegateGenerator, new TableDataGenerator, new ConstraintGenerator)
 
 		fsa.generateFile('index.ts', generators.map[generate(tables)].join('\n'))

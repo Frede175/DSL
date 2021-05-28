@@ -5,6 +5,6 @@
 		<package
 			uri = "http://www.sdu.dk/mmmi/Typescriptdsl"
 			class = "dk.sdu.mmmi.typescriptdsl.TypescriptdslPackage"
-			genModel = "model/generated/Typescriptdsl.genmodel" />
+			genModel = "model/custom/Typescriptdsl.genmodel" />
 	</extension>
 </plugin>

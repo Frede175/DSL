@@ -14,16 +14,16 @@ import dk.sdu.mmmi.typescriptdsl.Or
 import dk.sdu.mmmi.typescriptdsl.Parenthesis
 import dk.sdu.mmmi.typescriptdsl.Plus
 import dk.sdu.mmmi.typescriptdsl.RegexConstraint
-import dk.sdu.mmmi.typescriptdsl.Table
 import java.util.HashSet
 import java.util.List
 import java.util.Set
 
-import static extension dk.sdu.mmmi.generator.Helpers.toCamelCase
+import static extension dk.sdu.mmmi.generator.Helpers.*
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class ConstraintGenerator implements IntermediateGenerator {
 	
-	override generate(List<Table> tables) '''
+	override generate(List<RealTable> tables) '''
 		type Constraints<T> = { [key in keyof T]?: (value: T) => boolean }
 		
 		function isNullOrUndefined(value: unknown): boolean {
@@ -37,7 +37,7 @@ class ConstraintGenerator implements IntermediateGenerator {
 		}
 	'''
 	
-	def generateConstraints(Table table) '''
+	def generateConstraints(RealTable table) '''
 		«table.name.toCamelCase»: {
 			«FOR a: table.attributes.filter[it.constraint !== null] SEPARATOR ','» 
 			«a.generateAttributeConstraints»

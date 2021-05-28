@@ -1,13 +1,13 @@
 package dk.sdu.mmmi.generator
 
-import dk.sdu.mmmi.typescriptdsl.Table
 import java.util.List
 
 import static extension dk.sdu.mmmi.generator.Helpers.toCamelCase
+import dk.sdu.mmmi.typescriptdsl.RealTable
 
 class DelegateGenerator implements IntermediateGenerator {
 	
-	override generate(List<Table> tables) '''
+	override generate(List<RealTable> tables) '''
 		type ClientPromise<T, Args, Payload> = CheckSelect<Args, Promise<T | null>, Promise<Payload | null>>
 
 		«FOR t: tables SEPARATOR '\n'»
@@ -17,7 +17,7 @@ class DelegateGenerator implements IntermediateGenerator {
 		«generateClient(tables)»
 	'''
 	
-	private def generateDelegate(Table table) '''
+	private def generateDelegate(RealTable table) '''
 		interface «table.name»Delegate {
 			findFirst<T extends «table.name»Args>(args: SelectSubset<T, «table.name»Args>): ClientPromise<«table.name», T, «table.name»GetPayload<T>>
 			delete(where: WhereInput<«table.name»>): Promise<number>
@@ -26,7 +26,7 @@ class DelegateGenerator implements IntermediateGenerator {
 		}
 	'''
 	
-	private def generateClient(List<Table> tables) '''
+	private def generateClient(List<RealTable> tables) '''
 		export interface Client {
 			«FOR t: tables»
 			«t.name.toCamelCase»: «t.name»Delegate
