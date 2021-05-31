@@ -17,7 +17,6 @@ class TypescriptdslGenerator extends AbstractGenerator {
 	val generators = newArrayList(new MigrationGenerator, new EnvironmentGenerator, new TypeGenerator)
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		println('Modules: ' + resource.allContents.filter(dk.sdu.mmmi.typescriptdsl.Module).map[it.name].join(', '))
 		this.generators.forEach[generate(resource, fsa)]
 	}
 }

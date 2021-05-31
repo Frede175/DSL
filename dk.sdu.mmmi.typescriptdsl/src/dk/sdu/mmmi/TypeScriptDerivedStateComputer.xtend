@@ -16,8 +16,8 @@ class TypeScriptDerivedStateComputer implements IDerivedStateComputer {
 	
 	override installDerivedState(DerivedStateAwareResource resource, boolean preLinkingPhase) {
 		if (preLinkingPhase) { return }
-		resource.allContents.filter(ModuleRefernce).filter[it.type !== null].forEach[
-			(it.module.generic as GenericTable).real = (it.type as RealTable)
+		resource.allContents.filter(ModuleRefernce).filter[it.type !== null && it.module.generic !== null].forEach[
+			it.module.generic.real = it.type
 		]
 	}
 }

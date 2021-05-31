@@ -7,6 +7,8 @@ import org.eclipse.xtext.validation.Check
 import dk.sdu.mmmi.typescriptdsl.TypescriptdslPackage.Literals
 import dk.sdu.mmmi.typescriptdsl.Extendable
 import dk.sdu.mmmi.typescriptdsl.ModuleRefernce
+import com.google.common.collect.HashMultimap
+import java.util.Set
 
 /**
  * This class contains custom validation rules. 
@@ -14,6 +16,20 @@ import dk.sdu.mmmi.typescriptdsl.ModuleRefernce
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class TypescriptdslValidator extends AbstractTypescriptdslValidator {
+	
+	private def Set<Extendable> getAllExtendables(Extendable extendable) {
+		val visited = newHashSet()
+		
+		val extendables = newLinkedList(extendable)
+		
+		while (!extendables.empty) {
+			val e = extendables.pop
+			if (visited.add(e)) {
+				extendables.addAll(e.modules.map[it.module])
+			}
+		}
+		visited
+	}
 	
 	
 	@Check
@@ -36,9 +52,31 @@ class TypescriptdslValidator extends AbstractTypescriptdslValidator {
 	}
 	
 	@Check
+	def void validateUniqueTableNames(Extendable extendable) {
+		// unique names are already validated in each module/database
+		if (extendable.modules.length == 0) { return }
+		
+		val tables = extendable.allExtendables.flatMap[it.tables]
+		val map = HashMultimap.create()
+		
+		tables.forEach[map.put(it.name, it)]
+		
+		for (entry : map.asMap.entrySet.filter[it.value.size > 1]) {
+			for (table : entry.value) {
+				error('''Duplicate Table definition «table.name»''', table, Literals.TABLE__NAME)
+			}
+		}
+	}
+	
+	
+	
+	
+	@Check
 	def void validateRequiredParametersForGenerics(ModuleRefernce ref) {
 		if (ref.type === null && ref.module.generic !== null) {
 			error('''Module «ref.module.name» requires a generic parameter''', Literals.MODULE_REFERNCE__TYPE)
+		} else if (ref.type !== null && ref.module.generic === null) {
+			error('''Cannot defined a generic paramter for module «ref.module.name» that is not generic''', Literals.MODULE_REFERNCE__TYPE)
 		}
 	}
 }
